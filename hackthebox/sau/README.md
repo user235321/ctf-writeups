@@ -26,11 +26,10 @@ root shell.
 
 ### Nmap
 
-Run a full port scan, then a service/script scan on the discovered ports:
+Run a full port scan:
 
 ```bash
-ports=$(nmap -p- --min-rate=5000 -T4 10.129.63.134 | grep '^[0-9]' | cut -d '/' -f 1 | tr '\n' ',' | sed s/,$//)
-nmap -p$ports -sC -sV 10.129.63.134
+nmap -p- --min-rate=5000 -T4 10.129.63.134
 ```
 
 Results:

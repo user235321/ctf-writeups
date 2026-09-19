@@ -19,9 +19,6 @@ re-provisioned. As a member of **Domain Computers**, that account can abuse **AD
 the `RetroClients` template to request a certificate impersonating the **Administrator**,
 recover its NT hash, and log in via **Pass-the-Hash** for full domain compromise.
 
-**Skills required:** basic Active Directory enumeration
-**Skills learned:** enumeration with NetExec, pre-created machine account abuse, AD CS ESC1 with Certipy
-
 ---
 
 ## Enumeration

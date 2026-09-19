@@ -17,9 +17,6 @@ injection**, granting a reverse shell as the user `puma`. A **sudo misconfigurat
 combined with **CVE-2023-26604** (systemd/`less` pager escape) is then abused to obtain a
 root shell.
 
-**Skills required:** web enumeration, Linux fundamentals
-**Skills learned:** command injection, sudo exploitation
-
 ---
 
 ## Enumeration
@@ -164,19 +161,3 @@ When the output opens in the `less` pager, escape to a shell:
 
 Because the command runs as root, the spawned shell is also **root**. The **root flag** is
 at `/root`.
-
----
-
-## Mitigations
-
-- **Request Baskets:** upgrade past 1.2.1 to a version patching CVE-2023-27163; do not
-  expose the service without network segmentation.
-- **Maltrail:** upgrade past v0.53 to remove the unauthenticated command injection.
-- **sudo:** avoid granting `systemctl status` (or any pager-spawning command) via sudo;
-  set `LESSSECURE=1` or use `--no-pager`. Patch systemd against CVE-2023-26604.
-
-## References
-
-- CVE-2023-27163 — Request Baskets SSRF
-- Maltrail v0.53 unauthenticated OS command injection — Exploit-DB 51676
-- CVE-2023-26604 — systemd `less` pager privilege escalation

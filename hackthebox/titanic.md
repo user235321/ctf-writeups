@@ -65,7 +65,7 @@ The response returns the contents of `/etc/passwd`, revealing a local user calle
 ### Virtual host fuzzing — Gitea
 
 ```bash
-gobuster vhost -u http://titanic.htb -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt --append-domain -r
+ffuf -u http://titanic.htb -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-110000.txt -H "Host: FUZZ.titanic.htb" -fw 20
 ```
 
 This uncovers `dev.titanic.htb`, added to `/etc/hosts`, which hosts a **Gitea** instance that

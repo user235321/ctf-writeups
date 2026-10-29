@@ -31,8 +31,6 @@ PORT     STATE SERVICE VERSION
 8080/tcp open  http    Apache Tomcat/Coyote JSP engine 1.1
 ```
 
-![Nmap scan showing Tomcat on 8080](../images/jerry-01-nmap.png)
-
 ### Tomcat Manager
 
 Browsing `http://<target>:8080/` shows the default Tomcat landing page. The **Manager App**
@@ -44,8 +42,6 @@ tomcat : s3cret
 ```
 
 (The same pair is also exposed in the `401` error page's example `tomcat-users.xml` snippet.)
-
-![Logging into Tomcat Manager with default credentials](../images/jerry-02-tomcat-manager.png)
 
 ---
 
@@ -72,8 +68,6 @@ Request the deployed app to trigger the payload:
 curl "http://<target>:8080/shell/"
 ```
 
-![Deploying the reverse-shell WAR and catching the SYSTEM shell](../images/jerry-03-war-shell.png)
-
 Because the Tomcat service runs as **SYSTEM**, the reverse shell is already fully privileged —
 no further escalation needed:
 
@@ -94,4 +88,3 @@ C:\Users\Administrator\Desktop\flags\2 for the price of 1.txt
 type "C:\Users\Administrator\Desktop\flags\2 for the price of 1.txt"
 ```
 
-![Reading the combined user+root flag file](../images/jerry-04-flags.png)

